@@ -10,14 +10,6 @@ type Cache struct {
 	cache *ristretto.Cache[string, any]
 }
 
-func (c *Cache) Set(key string, value any) {
-	c.cache.Set(key, value, 0)
-}
-
-func (c *Cache) Get(key string) (any, bool) {
-	return c.cache.Get(key)
-}
-
 func New() (*Cache, error) {
 	cache, err := ristretto.NewCache(&ristretto.Config[string, any]{
 		// using default options from documentation
@@ -30,4 +22,12 @@ func New() (*Cache, error) {
 	}
 
 	return &Cache{cache}, nil
+}
+
+func (c *Cache) Set(key string, value any) {
+	c.cache.Set(key, value, 0)
+}
+
+func (c *Cache) Get(key string) (any, bool) {
+	return c.cache.Get(key)
 }
