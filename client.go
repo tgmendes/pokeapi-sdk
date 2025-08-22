@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -60,6 +61,14 @@ func (c *Client) get(ctx context.Context, path string, response any) error {
 		return fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		b, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		return HTTPError{
+			Message:    string(b),
+			StatusCode: resp.StatusCode,
+		}
+	}
 
 	return json.NewDecoder(resp.Body).Decode(response)
 }
