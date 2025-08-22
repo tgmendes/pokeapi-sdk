@@ -1,0 +1,87 @@
+{
+  "count": 1302,
+  "next": null,
+  "previous": "/pokemon?offset=0&limit=20",
+  "results": [
+    {
+      "name": "spearow",
+      "url": "/pokemon/21/"
+    },
+    {
+      "name": "fearow",
+      "url": "/pokemon/22/"
+    },
+    {
+      "name": "ekans",
+      "url": "/pokemon/23/"
+    },
+    {
+      "name": "arbok",
+      "url": "/pokemon/24/"
+    },
+    {
+      "name": "pikachu",
+      "url": "/pokemon/25/"
+    },
+    {
+      "name": "raichu",
+      "url": "/pokemon/26/"
+    },
+    {
+      "name": "sandshrew",
+      "url": "/pokemon/27/"
+    },
+    {
+      "name": "sandslash",
+      "url": "/pokemon/28/"
+    },
+    {
+      "name": "nidoran-f",
+      "url": "/pokemon/29/"
+    },
+    {
+      "name": "nidorina",
+      "url": "/pokemon/30/"
+    },
+    {
+      "name": "nidoqueen",
+      "url": "/pokemon/31/"
+    },
+    {
+      "name": "nidoran-m",
+      "url": "/pokemon/32/"
+    },
+    {
+      "name": "nidorino",
+      "url": "/pokemon/33/"
+    },
+    {
+      "name": "nidoking",
+      "url": "/pokemon/34/"
+    },
+    {
+      "name": "clefairy",
+      "url": "/pokemon/35/"
+    },
+    {
+      "name": "clefable",
+      "url": "/pokemon/36/"
+    },
+    {
+      "name": "vulpix",
+      "url": "/pokemon/37/"
+    },
+    {
+      "name": "ninetales",
+      "url": "/pokemon/38/"
+    },
+    {
+      "name": "jigglypuff",
+      "url": "/pokemon/39/"
+    },
+    {
+      "name": "wigglytuff",
+      "url": "/pokemon/40/"
+    }
+  ]
+}
