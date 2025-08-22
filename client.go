@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	"github.com/tgmendes/pokeapi-sdk/internal/cache"
 )
 
@@ -18,20 +20,37 @@ type Client struct {
 	http    *http.Client
 	baseURL string
 	cache   *cache.Cache
+	limiter *rate.Limiter
 }
 
-func NewClient(baseURL string) (*Client, error) {
-	cache, err := cache.New()
+type ClientOption func(*Client)
+
+func WithLimit(rpsLimit float64, burstLimit int) ClientOption {
+	return func(c *Client) {
+		c.limiter = rate.NewLimiter(rate.Limit(rpsLimit), burstLimit)
+	}
+}
+
+func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
+	memCache, err := cache.New()
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
+
+	c := Client{
 		http: &http.Client{
 			Timeout: 5 * time.Second,
 		},
 		baseURL: baseURL,
-		cache:   cache,
-	}, nil
+		cache:   memCache,
+		limiter: rate.NewLimiter(rate.Limit(20), 50),
+	}
+
+	for _, opt := range opts {
+		opt(&c)
+	}
+
+	return &c, nil
 }
 
 func FetchResults[T any](ctx context.Context, c *Client, l *List) ([]T, error) {
@@ -118,6 +137,15 @@ func (c *Client) Get(ctx context.Context, path string, response any) error {
 		requestURL = fmt.Sprintf("%s%s", c.baseURL, path)
 	}
 
+	cached, ok := c.cache.Get(cacheKey(requestURL))
+	if ok {
+		return json.Unmarshal(cached, response)
+	}
+
+	if err = c.limiter.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to wait for rate limit: %w", err)
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -137,7 +165,14 @@ func (c *Client) Get(ctx context.Context, path string, response any) error {
 		}
 	}
 
-	return json.NewDecoder(resp.Body).Decode(response)
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	c.cache.Set(cacheKey(requestURL), b)
+
+	return json.Unmarshal(b, response)
 }
 
 func cacheKey(rawURL string) string {

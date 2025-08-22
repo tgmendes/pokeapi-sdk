@@ -139,3 +139,27 @@ func TestClient_Error(t *testing.T) {
 	assert.Equal(t, httpErr.StatusCode, http.StatusInternalServerError)
 	assert.Equal(t, httpErr.Message, "something went wrong")
 }
+
+func TestClient_Cache(t *testing.T) {
+	serverCalled := 0
+	srv := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			serverCalled++
+			_, _ = w.Write(fixture(t, "pokemon_page1.json"))
+		},
+	))
+	defer srv.Close()
+
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	reqList, err := client.PokemonPage(t.Context())
+	require.NoError(t, err)
+	require.Equal(t, serverCalled, 1)
+
+	// fetch the same page again and make sure it doesn't call the server
+	cachedList, err := client.PokemonPage(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, 1, serverCalled)
+	assert.Equal(t, cachedList, reqList)
+}

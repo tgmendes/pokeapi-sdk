@@ -7,6 +7,7 @@ tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 require (
 	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/time v0.12.0
 )
 
 require (
