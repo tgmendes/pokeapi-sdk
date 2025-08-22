@@ -7,11 +7,11 @@ import (
 )
 
 type Cache struct {
-	cache *ristretto.Cache[string, any]
+	cache *ristretto.Cache[string, []byte]
 }
 
 func New() (*Cache, error) {
-	cache, err := ristretto.NewCache(&ristretto.Config[string, any]{
+	cache, err := ristretto.NewCache(&ristretto.Config[string, []byte]{
 		// using default options from documentation
 		NumCounters: 1e7,     // number of keys to track frequency of (10M).
 		MaxCost:     1 << 30, // maximum cost of cache (1GB).
@@ -24,10 +24,12 @@ func New() (*Cache, error) {
 	return &Cache{cache}, nil
 }
 
-func (c *Cache) Set(key string, value any) {
+func (c *Cache) Set(key string, value []byte) {
 	c.cache.Set(key, value, 0)
+	// wait for all writes to finish
+	c.cache.Wait()
 }
 
-func (c *Cache) Get(key string) (any, bool) {
+func (c *Cache) Get(key string) ([]byte, bool) {
 	return c.cache.Get(key)
 }
