@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -23,9 +24,19 @@ func NewClient(baseURL string) *Client {
 }
 
 func (c *Client) get(ctx context.Context, path string, response any) error {
-	url := fmt.Sprintf("%s%s", c.baseURL, path)
+	// a request to get can provide both an absolute and relative path. We conveniently
+	// check if the path is absolute or relative and combine them if it's relative.
+	parsed, err := url.Parse(path)
+	if err != nil {
+		return fmt.Errorf("failed to parse url: %w", err)
+	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	requestURL := parsed.String()
+	if !parsed.IsAbs() {
+		requestURL = fmt.Sprintf("%s%s", c.baseURL, path)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
