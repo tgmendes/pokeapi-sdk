@@ -41,8 +41,10 @@ func TestList_FetchResults(t *testing.T) {
 		},
 	}
 
-	c := pokeapi.NewClient(srv.URL)
-	res, err := pokeapi.FetchResults[pokeapi.Pokemon](t.Context(), c, &l)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	res, err := pokeapi.FetchResults[pokeapi.Pokemon](t.Context(), client, &l)
 	require.NoError(t, err)
 
 	assert.Len(t, res, 3)
@@ -108,8 +110,10 @@ func TestList_FetchResultsN(t *testing.T) {
 		},
 	}
 
-	c := pokeapi.NewClient(srv.URL)
-	res, err := pokeapi.FetchResultsN[pokeapi.Pokemon](t.Context(), c, &l, 4)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	res, err := pokeapi.FetchResultsN[pokeapi.Pokemon](t.Context(), client, &l, 4)
 	require.NoError(t, err)
 
 	assert.Len(t, res, 11)
@@ -124,8 +128,10 @@ func TestClient_Error(t *testing.T) {
 	))
 	defer srv.Close()
 
-	c := pokeapi.NewClient(srv.URL)
-	_, err := c.PokemonPage(t.Context())
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	_, err = client.PokemonPage(t.Context())
 	require.Error(t, err)
 
 	var httpErr pokeapi.HTTPError

@@ -23,7 +23,9 @@ func TestGetPokemonByName(t *testing.T) {
 	))
 	defer srv.Close()
 
-	client := pokeapi.NewClient(srv.URL)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
 	pokemon, err := client.PokemonByName(t.Context(), "clefairy")
 	require.NoError(t, err)
 	require.NotNil(t, pokemon)
@@ -45,7 +47,9 @@ func TestGetPokemonByID(t *testing.T) {
 	))
 	defer srv.Close()
 
-	client := pokeapi.NewClient(srv.URL)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
 	pokemon, err := client.PokemonByID(t.Context(), 35)
 	require.NoError(t, err)
 	require.NotNil(t, pokemon)
@@ -63,7 +67,9 @@ func TestPokemonPage(t *testing.T) {
 	))
 	defer srv.Close()
 
-	client := pokeapi.NewClient(srv.URL)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
 	page, err := client.PokemonPage(t.Context())
 	require.NoError(t, err)
 	require.NotNil(t, page)
@@ -96,7 +102,9 @@ func TestAllPokemon(t *testing.T) {
 	))
 	defer srv.Close()
 
-	client := pokeapi.NewClient(srv.URL)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
 	pokemon, err := client.AllPokemon(t.Context())
 	require.NoError(t, err)
 	require.NotNil(t, pokemon)
@@ -149,9 +157,10 @@ func TestPokemonPager(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			gotLimit = ""
 			gotOffset = ""
-			client := pokeapi.NewClient(srv.URL)
+			client, err := pokeapi.NewClient(srv.URL)
+			require.NoError(t, err)
 			pager := client.PokemonPager(test.opts...)
-			_, err := pager.Next(t.Context())
+			_, err = pager.Next(t.Context())
 			require.NoError(t, err)
 			assert.Equal(t, test.expLimit, gotLimit)
 			assert.Equal(t, test.expOffset, gotOffset)

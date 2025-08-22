@@ -197,7 +197,7 @@ type Stat struct {
 func (c *Client) PokemonByID(ctx context.Context, id int) (*Pokemon, error) {
 	path := fmt.Sprintf("%s/%d", pokemonPath, id)
 	var pokemon Pokemon
-	err := c.get(ctx, path, &pokemon)
+	err := c.Get(ctx, path, &pokemon)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pokemon with id %d: %w", id, err)
 	}
@@ -209,7 +209,7 @@ func (c *Client) PokemonByName(ctx context.Context, name string) (*Pokemon, erro
 	path := fmt.Sprintf("%s/%s", pokemonPath, name)
 
 	var pokemon Pokemon
-	err := c.get(ctx, path, &pokemon)
+	err := c.Get(ctx, path, &pokemon)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pokemon with name %s: %w", name, err)
 	}

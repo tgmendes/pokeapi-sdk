@@ -7,29 +7,38 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 	"sync"
 	"time"
+
+	"github.com/tgmendes/pokeapi-sdk/internal/cache"
 )
 
 type Client struct {
 	http    *http.Client
 	baseURL string
+	cache   *cache.Cache
 }
 
-func NewClient(baseURL string) *Client {
+func NewClient(baseURL string) (*Client, error) {
+	cache, err := cache.New()
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		http: &http.Client{
 			Timeout: 5 * time.Second,
 		},
 		baseURL: baseURL,
-	}
+		cache:   cache,
+	}, nil
 }
 
 func FetchResults[T any](ctx context.Context, c *Client, l *List) ([]T, error) {
 	results := make([]T, 0, len(l.Results))
 	for _, result := range l.Results {
 		var resp T
-		err := c.get(ctx, result.URL, &resp)
+		err := c.Get(ctx, result.URL, &resp)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +72,7 @@ func FetchResultsN[T any](ctx context.Context, c *Client, l *List, n int) ([]T, 
 			defer wg.Done()
 			for j := range jobs {
 				var v T
-				err := c.get(ctx, j.url, &v)
+				err := c.Get(ctx, j.url, &v)
 				out <- res{j.index, v, err}
 			}
 		}()
@@ -96,7 +105,7 @@ func FetchResultsN[T any](ctx context.Context, c *Client, l *List, n int) ([]T, 
 	return results, ctx.Err()
 }
 
-func (c *Client) get(ctx context.Context, path string, response any) error {
+func (c *Client) Get(ctx context.Context, path string, response any) error {
 	// a request to get can provide both an absolute and relative path. We conveniently
 	// check if the path is absolute or relative and combine them if it's relative.
 	parsed, err := url.Parse(path)
@@ -129,4 +138,32 @@ func (c *Client) get(ctx context.Context, path string, response any) error {
 	}
 
 	return json.NewDecoder(resp.Body).Decode(response)
+}
+
+func cacheKey(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		// fallback: just return url
+		return rawURL
+	}
+
+	// sort query params
+	q := u.Query()
+	keys := make([]string, 0, len(q))
+	for k := range q {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	values := url.Values{}
+	for _, k := range keys {
+		vs := q[k]
+		sort.Strings(vs)
+		for _, v := range vs {
+			values.Add(k, v)
+		}
+	}
+	u.RawQuery = values.Encode()
+
+	return u.String()
 }

@@ -4,11 +4,16 @@ go 1.24.3
 
 tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
-require github.com/stretchr/testify v1.10.0
+require (
+	github.com/dgraph-io/ristretto/v2 v2.3.0
+	github.com/stretchr/testify v1.10.0
+)
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/getkin/kin-openapi v0.132.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
@@ -24,6 +29,7 @@ require (
 	github.com/speakeasy-api/openapi-overlay v0.10.2 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
 	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

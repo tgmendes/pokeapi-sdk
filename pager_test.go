@@ -31,10 +31,11 @@ func TestPager_Next(t *testing.T) {
 	))
 	defer srv.Close()
 
-	sdk := pokeapi.NewClient(srv.URL)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
 
 	startPath := fmt.Sprintf("%s/pokemon?offset=0", srv.URL)
-	pager := pokeapi.NewPager(sdk, startPath)
+	pager := pokeapi.NewPager(client, startPath)
 
 	var totalResults []pokeapi.List
 	for {
@@ -68,13 +69,14 @@ func TestPager_Previous(t *testing.T) {
 	))
 	defer srv.Close()
 
-	sdk := pokeapi.NewClient(srv.URL)
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
 
 	startPath := fmt.Sprintf("%s/pokemon?offset=0", srv.URL)
-	pager := pokeapi.NewPager(sdk, startPath)
+	pager := pokeapi.NewPager(client, startPath)
 
 	// fetch the first page
-	_, err := pager.Next(t.Context())
+	_, err = pager.Next(t.Context())
 	require.NoError(t, err)
 
 	// there is no previous page before the first page

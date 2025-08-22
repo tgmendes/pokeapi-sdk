@@ -52,7 +52,7 @@ func (p *Pager) Previous(ctx context.Context) (*List, error) {
 
 func (p *Pager) iter(ctx context.Context, url string) (*List, error) {
 	var results List
-	if err := p.c.get(ctx, url, &results); err != nil {
+	if err := p.c.Get(ctx, url, &results); err != nil {
 		return nil, err
 	}
 
