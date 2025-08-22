@@ -7,7 +7,7 @@ import (
 
 var ErrNoMorePages = errors.New("no more pages")
 
-type List[T any] struct {
+type List struct {
 	Count   int          `json:"count"`
 	Next    *string      `json:"next"`
 	Prev    *string      `json:"previous"`
@@ -19,34 +19,20 @@ type ListResult struct {
 	URL  string `json:"url"`
 }
 
-func (l List[T]) FetchResults(ctx context.Context, c *Client) ([]T, error) {
-	results := make([]T, 0, len(l.Results))
-	for _, result := range l.Results {
-		var resp T
-		err := c.get(ctx, result.URL, &resp)
-		if err != nil {
-			return nil, err
-		}
-		results = append(results, resp)
-	}
-
-	return results, nil
-}
-
-type Pager[T any] struct {
+type Pager struct {
 	c    *Client
 	next *string
 	prev *string
 }
 
-func NewPager[T any](c *Client, startPath string) *Pager[T] {
-	return &Pager[T]{
+func NewPager(c *Client, startPath string) *Pager {
+	return &Pager{
 		c:    c,
 		next: &startPath,
 	}
 }
 
-func (p *Pager[T]) Next(ctx context.Context) (*List[T], error) {
+func (p *Pager) Next(ctx context.Context) (*List, error) {
 	if p.next == nil {
 		return nil, ErrNoMorePages
 	}
@@ -54,7 +40,7 @@ func (p *Pager[T]) Next(ctx context.Context) (*List[T], error) {
 	return p.iter(ctx, *p.next)
 }
 
-func (p *Pager[T]) Previous(ctx context.Context) (*List[T], error) {
+func (p *Pager) Previous(ctx context.Context) (*List, error) {
 	if p.prev == nil {
 		return nil, ErrNoMorePages
 	}
@@ -62,8 +48,8 @@ func (p *Pager[T]) Previous(ctx context.Context) (*List[T], error) {
 	return p.iter(ctx, *p.prev)
 }
 
-func (p *Pager[T]) iter(ctx context.Context, url string) (*List[T], error) {
-	var results List[T]
+func (p *Pager) iter(ctx context.Context, url string) (*List, error) {
+	var results List
 	if err := p.c.get(ctx, url, &results); err != nil {
 		return nil, err
 	}

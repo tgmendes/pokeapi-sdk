@@ -23,6 +23,20 @@ func NewClient(baseURL string) *Client {
 	}
 }
 
+func FetchListResults[T any](ctx context.Context, c *Client, l *List) ([]T, error) {
+	results := make([]T, 0, len(l.Results))
+	for _, result := range l.Results {
+		var resp T
+		err := c.get(ctx, result.URL, &resp)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, resp)
+	}
+
+	return results, nil
+}
+
 func (c *Client) get(ctx context.Context, path string, response any) error {
 	// a request to get can provide both an absolute and relative path. We conveniently
 	// check if the path is absolute or relative and combine them if it's relative.
@@ -45,6 +59,7 @@ func (c *Client) get(ctx context.Context, path string, response any) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute request: %w", err)
 	}
+	defer resp.Body.Close()
 
 	return json.NewDecoder(resp.Body).Decode(response)
 }

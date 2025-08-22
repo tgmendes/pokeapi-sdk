@@ -231,7 +231,7 @@ func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Po
 			return nil, err
 		}
 
-		pokemons, err := list.FetchResults(ctx, c)
+		pokemons, err := FetchListResults[Pokemon](ctx, c, list)
 		if err != nil {
 			return nil, err
 		}
@@ -242,7 +242,7 @@ func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Po
 	return results, nil
 }
 
-func (c *Client) PokemonPager(options ...RequestOption) *Pager[Pokemon] {
+func (c *Client) PokemonPager(options ...RequestOption) *Pager {
 	opts := defaultRequestOptions()
 	if options != nil {
 		opts = processOptions(options...)
@@ -254,5 +254,5 @@ func (c *Client) PokemonPager(options ...RequestOption) *Pager[Pokemon] {
 		startPath = fmt.Sprintf("%s?%s", pokemonPath, q)
 	}
 
-	return NewPager[Pokemon](c, startPath)
+	return NewPager(c, startPath)
 }

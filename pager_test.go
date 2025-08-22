@@ -1,7 +1,6 @@
 package pokeapi_test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -35,9 +34,9 @@ func TestPager_Next(t *testing.T) {
 	sdk := pokeapi.NewClient(srv.URL)
 
 	startPath := fmt.Sprintf("%s/pokemon?offset=0", srv.URL)
-	pager := pokeapi.NewPager[pokeapi.Pokemon](sdk, startPath)
+	pager := pokeapi.NewPager(sdk, startPath)
 
-	var totalResults []pokeapi.List[pokeapi.Pokemon]
+	var totalResults []pokeapi.List
 	for {
 		list, err := pager.Next(t.Context())
 		if errors.Is(err, pokeapi.ErrNoMorePages) {
@@ -72,7 +71,7 @@ func TestPager_Previous(t *testing.T) {
 	sdk := pokeapi.NewClient(srv.URL)
 
 	startPath := fmt.Sprintf("%s/pokemon?offset=0", srv.URL)
-	pager := pokeapi.NewPager[pokeapi.Pokemon](sdk, startPath)
+	pager := pokeapi.NewPager(sdk, startPath)
 
 	// fetch the first page
 	_, err := pager.Next(t.Context())
@@ -92,39 +91,4 @@ func TestPager_Previous(t *testing.T) {
 	require.NotNil(t, list)
 	// first element of first page is bulbasaur
 	assert.Equal(t, list.Results[0].Name, "bulbasaur")
-}
-
-func TestList_FetchResults(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			res := pokeapi.Pokemon{}
-
-			err := json.NewEncoder(w).Encode(&res)
-			require.NoError(t, err)
-		},
-	))
-	defer srv.Close()
-
-	l := pokeapi.List[pokeapi.Pokemon]{
-		Results: []pokeapi.ListResult{
-			{
-				Name: "bulbasaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "ivysaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "venusaur",
-				URL:  "/pokemon/1",
-			},
-		},
-	}
-
-	c := pokeapi.NewClient(srv.URL)
-	res, err := l.FetchResults(t.Context(), c)
-	require.NoError(t, err)
-
-	assert.Len(t, res, 3)
 }
