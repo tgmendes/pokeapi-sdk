@@ -19,10 +19,12 @@ type ListResult struct {
 	URL  string `json:"url"`
 }
 
+// Pager is used to iterate over a list of results from the PokeAPI.
+// This is not concurrent safe, and should be used sequentially.
 type Pager struct {
-	c    *Client
-	next *string
-	prev *string
+	c        *Client
+	next     *string
+	previous *string
 }
 
 func NewPager(c *Client, startPath string) *Pager {
@@ -41,11 +43,11 @@ func (p *Pager) Next(ctx context.Context) (*List, error) {
 }
 
 func (p *Pager) Previous(ctx context.Context) (*List, error) {
-	if p.prev == nil {
+	if p.previous == nil {
 		return nil, ErrNoMorePages
 	}
 
-	return p.iter(ctx, *p.prev)
+	return p.iter(ctx, *p.previous)
 }
 
 func (p *Pager) iter(ctx context.Context, url string) (*List, error) {
@@ -57,13 +59,16 @@ func (p *Pager) iter(ctx context.Context, url string) (*List, error) {
 	if results.Next == nil || *results.Next == "" {
 		p.next = nil
 	} else {
-		p.next = results.Next
+		// avoid using same pointer as the list results
+		next := *results.Next
+		p.next = &next
 	}
 
 	if results.Prev == nil || *results.Prev == "" {
-		p.prev = nil
+		p.previous = nil
 	} else {
-		p.prev = results.Prev
+		prev := *results.Prev
+		p.previous = &prev
 	}
 
 	return &results, nil
