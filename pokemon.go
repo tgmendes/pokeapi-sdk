@@ -2,6 +2,7 @@ package pokeapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -214,4 +215,44 @@ func (c *Client) PokemonByName(ctx context.Context, name string) (*Pokemon, erro
 	}
 
 	return &pokemon, nil
+}
+
+func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Pokemon, error) {
+	pager := c.PokemonPager(options...)
+
+	var results []Pokemon
+	for {
+		list, err := pager.Next(ctx)
+		if errors.Is(err, ErrNoMorePages) {
+			break
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		pokemons, err := list.FetchResults(ctx, c)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, pokemons...)
+	}
+
+	return results, nil
+}
+
+func (c *Client) PokemonPager(options ...RequestOption) *Pager[Pokemon] {
+	opts := defaultRequestOptions()
+	if options != nil {
+		opts = processOptions(options...)
+	}
+
+	q := opts.urlParams.Encode()
+	startPath := pokemonPath
+	if q != "" {
+		startPath = fmt.Sprintf("%s?%s", pokemonPath, q)
+	}
+
+	return NewPager[Pokemon](c, startPath)
 }
