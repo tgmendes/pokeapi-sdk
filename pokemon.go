@@ -242,6 +242,12 @@ func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Po
 	return results, nil
 }
 
+func (c *Client) PokemonPage(ctx context.Context, options ...RequestOption) (*List, error) {
+	pager := c.PokemonPager(options...)
+
+	return pager.Next(ctx)
+}
+
 func (c *Client) PokemonPager(options ...RequestOption) *Pager {
 	opts := defaultRequestOptions()
 	if options != nil {

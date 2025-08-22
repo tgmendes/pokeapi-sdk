@@ -56,6 +56,58 @@ func TestGetPokemonByID(t *testing.T) {
 	assert.Equal(t, pokemon.Name, "clefairy")
 }
 
+func TestPokemonPage(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write(fixture(t, "pokemon_page1.json"))
+		},
+	))
+	defer srv.Close()
+
+	client := pokeapi.NewClient(srv.URL)
+	page, err := client.PokemonPage(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, page)
+	assert.Len(t, page.Results, 20)
+	assert.Equal(t, page.Results[0].Name, "bulbasaur")
+}
+
+func TestAllPokemon(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Println(r.URL.Query().Get("offset"))
+			// because it's a test we can hardcode the comparison - if we wanted something more
+			// robust we could parse the URL and compare the query parameters.
+			if r.URL.Query().Get("offset") == "0" {
+				fmt.Println("here")
+				_, _ = w.Write(fixture(t, "pokemon_page1.json"))
+				return
+			}
+
+			if r.URL.Query().Get("offset") == "20" {
+				_, _ = w.Write(fixture(t, "pokemon_page2.json"))
+				return
+			}
+
+			// this is a direct query to fetch a pokemon
+			if r.URL.Query().Get("offset") == "" {
+				// for testing purposes just write same pokemon all the time
+				_, _ = w.Write(fixture(t, "clefairy.json"))
+				return
+			}
+		},
+	))
+	defer srv.Close()
+
+	client := pokeapi.NewClient(srv.URL)
+	pokemon, err := client.AllPokemon(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, pokemon)
+	assert.Len(t, pokemon, 40)
+	assert.Equal(t, pokemon[0].ID, 35)
+	assert.Equal(t, pokemon[0].Name, "clefairy")
+}
+
 func TestPokemonPager(t *testing.T) {
 	gotLimit := ""
 	gotOffset := ""
@@ -108,40 +160,4 @@ func TestPokemonPager(t *testing.T) {
 			assert.Equal(t, test.expOffset, gotOffset)
 		})
 	}
-}
-
-func TestAllPokemon(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println(r.URL.Query().Get("offset"))
-			// because it's a test we can hardcode the comparison - if we wanted something more
-			// robust we could parse the URL and compare the query parameters.
-			if r.URL.Query().Get("offset") == "0" {
-				fmt.Println("here")
-				_, _ = w.Write(fixture(t, "pokemon_page1.json"))
-				return
-			}
-
-			if r.URL.Query().Get("offset") == "20" {
-				_, _ = w.Write(fixture(t, "pokemon_page2.json"))
-				return
-			}
-
-			// this is a direct query to fetch a pokemon
-			if r.URL.Query().Get("offset") == "" {
-				// for testing purposes just write same pokemon all the time
-				_, _ = w.Write(fixture(t, "clefairy.json"))
-				return
-			}
-		},
-	))
-	defer srv.Close()
-
-	client := pokeapi.NewClient(srv.URL)
-	pokemon, err := client.AllPokemon(t.Context())
-	require.NoError(t, err)
-	require.NotNil(t, pokemon)
-	assert.Len(t, pokemon, 40)
-	assert.Equal(t, pokemon[0].ID, 35)
-	assert.Equal(t, pokemon[0].Name, "clefairy")
 }
