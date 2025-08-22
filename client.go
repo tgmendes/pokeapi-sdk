@@ -2,6 +2,7 @@ package pokeapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -21,18 +22,18 @@ func NewClient(baseURL string) *Client {
 	}
 }
 
-func (c *Client) get(ctx context.Context, path string) (*http.Response, error) {
+func (c *Client) get(ctx context.Context, path string, response any) error {
 	url := fmt.Sprintf("%s%s", c.baseURL, path)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return fmt.Errorf("failed to execute request: %w", err)
 	}
 
-	return resp, nil
+	return json.NewDecoder(resp.Body).Decode(response)
 }
