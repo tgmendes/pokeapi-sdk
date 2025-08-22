@@ -1,7 +1,6 @@
 package pokeapi_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -75,11 +74,9 @@ func TestPokemonPage(t *testing.T) {
 func TestAllPokemon(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println(r.URL.Query().Get("offset"))
 			// because it's a test we can hardcode the comparison - if we wanted something more
 			// robust we could parse the URL and compare the query parameters.
 			if r.URL.Query().Get("offset") == "0" {
-				fmt.Println("here")
 				_, _ = w.Write(fixture(t, "pokemon_page1.json"))
 				return
 			}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -24,7 +25,7 @@ func NewClient(baseURL string) *Client {
 	}
 }
 
-func FetchListResults[T any](ctx context.Context, c *Client, l *List) ([]T, error) {
+func FetchResults[T any](ctx context.Context, c *Client, l *List) ([]T, error) {
 	results := make([]T, 0, len(l.Results))
 	for _, result := range l.Results {
 		var resp T
@@ -36,6 +37,63 @@ func FetchListResults[T any](ctx context.Context, c *Client, l *List) ([]T, erro
 	}
 
 	return results, nil
+}
+
+func FetchResultsN[T any](ctx context.Context, c *Client, l *List, n int) ([]T, error) {
+	if n < 1 {
+		n = 1
+	}
+	type job struct {
+		index int
+		url   string
+	}
+	type res struct {
+		index int
+		value T
+		err   error
+	}
+
+	jobs := make(chan job)
+	out := make(chan res)
+
+	var wg sync.WaitGroup
+	for range n {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := range jobs {
+				var v T
+				err := c.get(ctx, j.url, &v)
+				out <- res{j.index, v, err}
+			}
+		}()
+	}
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	go func() {
+		for i, r := range l.Results {
+			select {
+			case <-ctx.Done():
+				close(jobs)
+				return
+			case jobs <- job{i, r.URL}:
+			}
+		}
+		close(jobs)
+	}()
+
+	results := make([]T, len(l.Results))
+	for r := range out {
+		if r.err != nil {
+			return nil, r.err
+		}
+		results[r.index] = r.value
+	}
+
+	return results, ctx.Err()
 }
 
 func (c *Client) get(ctx context.Context, path string, response any) error {

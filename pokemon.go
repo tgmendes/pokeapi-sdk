@@ -231,7 +231,7 @@ func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Po
 			return nil, err
 		}
 
-		pokemons, err := FetchListResults[Pokemon](ctx, c, list)
+		pokemons, err := FetchResults[Pokemon](ctx, c, list)
 		if err != nil {
 			return nil, err
 		}

@@ -42,10 +42,77 @@ func TestList_FetchResults(t *testing.T) {
 	}
 
 	c := pokeapi.NewClient(srv.URL)
-	res, err := pokeapi.FetchListResults[pokeapi.Pokemon](t.Context(), c, &l)
+	res, err := pokeapi.FetchResults[pokeapi.Pokemon](t.Context(), c, &l)
 	require.NoError(t, err)
 
 	assert.Len(t, res, 3)
+}
+
+func TestList_FetchResultsN(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			res := pokeapi.Pokemon{}
+
+			err := json.NewEncoder(w).Encode(&res)
+			require.NoError(t, err)
+		},
+	))
+	defer srv.Close()
+
+	l := pokeapi.List{
+		Results: []pokeapi.ListResult{
+			{
+				Name: "bulbasaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "ivysaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "venusaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "ivysaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "venusaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "ivysaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "venusaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "ivysaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "venusaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "ivysaur",
+				URL:  "/pokemon/1",
+			},
+			{
+				Name: "venusaur",
+				URL:  "/pokemon/1",
+			},
+		},
+	}
+
+	c := pokeapi.NewClient(srv.URL)
+	res, err := pokeapi.FetchResultsN[pokeapi.Pokemon](t.Context(), c, &l, 4)
+	require.NoError(t, err)
+
+	assert.Len(t, res, 11)
 }
 
 func TestClient_Error(t *testing.T) {
