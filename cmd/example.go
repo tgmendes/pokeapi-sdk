@@ -16,6 +16,11 @@ func main() {
 
 	fmt.Printf("Pokémon: %s (ID: %d)\n", pokemon.Name, pokemon.ID)
 
+	// get pokemon by name - should be cached
+	pokemon, _ = client.PokemonByName(context.Background(), "pikachu")
+
+	fmt.Printf("Pokémon: %s (ID: %d)\n", pokemon.Name, pokemon.ID)
+
 	// get pokemon by id
 	pokemon, _ = client.PokemonByID(context.Background(), 1)
 

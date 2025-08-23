@@ -9,14 +9,24 @@ efficient way to fetch Pokemon data with built-in caching, rate limiting, and st
 go get github.com/tgmendes/pokeapi-sdk
 ```
 
-## What it does
+## Features
 
-This SDK allows you to:
-- Fetch Pokemon data by name or ID
-- Retrieve generation information
+This SDK allows any consumer to interact with the pokemon API.
+
+For now it is limited in scope, and only provides methods to fetch pokemon
+or generations. 
+
+Results from the API are parsed, enriched and transformed to provide a more 
+ergonomic experience (for example, pokemon moves data is automatically fetched
+and transformed to a more readable format).
+
+Summary of features:
+- Get Pokemon or Generation data
+- Fetch resources by name, id, or all
+- Paginate through lists of results from the API
+- Rate limiting with configurable burst and limit
+- Automatic caching of results
 - Access Pokemon moves, stats, and other attributes
-- Benefit from automatic caching and rate limiting
-- Handle paginated results
 
 ## Usage
 
