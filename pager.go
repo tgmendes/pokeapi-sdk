@@ -7,11 +7,14 @@ import (
 	"github.com/tgmendes/pokeapi-sdk/internal/apitype"
 )
 
+// Resource represents a basic resource with a name and URL.
+// It maps to an API named resource and is used to fetch the full resource data.
 type Resource struct {
-	Name string
-	URL  string
+	Name string // Name of the resource
+	URL  string // URL to fetch the full resource data
 }
 
+// ErrNoMorePages is returned when there are no more pages to iterate through.
 var ErrNoMorePages = errors.New("no more pages")
 
 // Pager is used to iterate over a list of results from the PokeAPI.
@@ -22,6 +25,8 @@ type Pager struct {
 	previous *string
 }
 
+// NewPager creates a new pager starting from the given path.
+// The pager can be used to iterate through paginated API results.
 func NewPager(c *Client, startPath string) *Pager {
 	return &Pager{
 		c:    c,
@@ -29,6 +34,8 @@ func NewPager(c *Client, startPath string) *Pager {
 	}
 }
 
+// Next fetches the next page of results.
+// Returns ErrNoMorePages when there are no more pages available.
 func (p *Pager) Next(ctx context.Context) ([]Resource, error) {
 	if p.next == nil {
 		return nil, ErrNoMorePages
@@ -37,6 +44,8 @@ func (p *Pager) Next(ctx context.Context) ([]Resource, error) {
 	return p.iter(ctx, *p.next)
 }
 
+// Previous fetches the previous page of results.
+// Returns ErrNoMorePages when there are no more pages available.
 func (p *Pager) Previous(ctx context.Context) ([]Resource, error) {
 	if p.previous == nil {
 		return nil, ErrNoMorePages

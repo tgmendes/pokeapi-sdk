@@ -10,6 +10,7 @@ const (
 	defaultOffset = 0
 )
 
+// RequestOption is a function that configures request parameters.
 type RequestOption func(*requestOptions)
 
 type requestOptions struct {
@@ -21,6 +22,7 @@ func defaultRequestOptions() requestOptions {
 }
 
 // Limit sets the number of entries that a request should return.
+// The default limit is 20 entries per page.
 func Limit(amount int) RequestOption {
 	return func(o *requestOptions) {
 		o.urlParams.Set("limit", strconv.Itoa(amount))
@@ -28,6 +30,7 @@ func Limit(amount int) RequestOption {
 }
 
 // Offset sets the index of the first entry to return.
+// Use this for pagination to skip a certain number of entries.
 func Offset(amount int) RequestOption {
 	return func(o *requestOptions) {
 		o.urlParams.Set("offset", strconv.Itoa(amount))

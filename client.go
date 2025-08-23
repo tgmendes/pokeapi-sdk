@@ -1,3 +1,22 @@
+// Package pokeapi provides a Go SDK for interacting with the PokéAPI (https://pokeapi.co/).
+//
+// This package offers a simple, efficient way to fetch Pokémon data with built-in
+// caching, rate limiting, and structured data types. It handles pagination automatically
+// and provides both sequential and concurrent data fetching options.
+//
+// Basic usage:
+//
+//	client, err := pokeapi.NewClient("https://pokeapi.co/api/v2", pokeapi.WithLimit(10, 20))
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	pokemon, err := client.PokemonByName(context.Background(), "pikachu")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	fmt.Printf("Pokémon: %s (ID: %d)\n", pokemon.Name, pokemon.ID)
 package pokeapi
 
 import (
@@ -16,6 +35,7 @@ import (
 	"github.com/tgmendes/pokeapi-sdk/internal/cache"
 )
 
+// Client represents a PokéAPI client with built-in caching and rate limiting.
 type Client struct {
 	http    *http.Client
 	baseURL string
@@ -23,14 +43,19 @@ type Client struct {
 	limiter *rate.Limiter
 }
 
+// ClientOption is a function that configures a Client.
 type ClientOption func(*Client)
 
+// WithLimit is a client option that configures the rate limiter for the client.
+// rpsLimit sets the requests per second limit, burstLimit sets the burst size.
 func WithLimit(rpsLimit float64, burstLimit int) ClientOption {
 	return func(c *Client) {
 		c.limiter = rate.NewLimiter(rate.Limit(rpsLimit), burstLimit)
 	}
 }
 
+// NewClient creates a new PokéAPI client with the given base URL and options.
+// The client includes default rate limiting (20 RPS, 50 burst) and caching.
 func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	memCache, err := cache.New()
 	if err != nil {
@@ -53,6 +78,8 @@ func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	return &c, nil
 }
 
+// FetchResults fetches all resources from the given list sequentially.
+// It makes individual API calls for each resource URL and returns the results.
 func FetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, error) {
 	results := make([]T, 0, len(l))
 	for _, result := range l {
@@ -67,6 +94,8 @@ func FetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, err
 	return results, nil
 }
 
+// FetchResultsN fetches all resources from the given list concurrently using n workers.
+// It's more efficient than FetchResults for large lists but uses more resources.
 func FetchResultsN[T any](ctx context.Context, c *Client, l []Resource, n int) ([]T, error) {
 	if n < 1 {
 		n = 1
@@ -124,6 +153,10 @@ func FetchResultsN[T any](ctx context.Context, c *Client, l []Resource, n int) (
 	return results, ctx.Err()
 }
 
+// Get performs a GET request to the given path and unmarshals the response.
+// The path can be absolute or relative to the client's base URL. If a relative path is given,
+// an absolute path is constructed by joining the base URL and the relative path.
+// Responses are cached and rate limited automatically.
 func (c *Client) Get(ctx context.Context, path string, response any) error {
 	// a request to get can provide both an absolute and relative path. We conveniently
 	// check if the path is absolute or relative and combine them if it's relative.

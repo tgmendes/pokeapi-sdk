@@ -9,27 +9,30 @@ import (
 	"github.com/tgmendes/pokeapi-sdk/internal/apitype"
 )
 
-type Pokemon struct {
-	ID             int
-	Name           string
-	BaseExperience int
-	Height         int
-	Order          int
-	Weight         int
-	IsLegendary    bool
-	IsMythical     bool
-	Moves          []Move
-}
-
-type Move struct {
-	Accuracy int
-	Name     string
-	Power    int
-	PP       int
-}
-
 const pokemonPath = "/pokemon"
 
+// Pokemon represents a Pokémon with its basic attributes and moves.
+type Pokemon struct {
+	ID             int    // Unique identifier for the Pokémon
+	Name           string // Name of the Pokémon
+	BaseExperience int    // Base experience gained when defeating this Pokémon
+	Height         int    // Height in decimeters
+	Order          int    // Order for sorting in the Pokédex
+	Weight         int    // Weight
+	IsLegendary    bool   // Whether this Pokémon is legendary
+	IsMythical     bool   // Whether this Pokémon is mythical
+	Moves          []Move // List of moves the Pokémon can learn
+}
+
+// Move represents a Pokémon move with its combat attributes.
+type Move struct {
+	Accuracy int    // Accuracy percentage of the move
+	Name     string // Name of the move
+	Power    int    // Base power of the move
+	PP       int    // Power Points - how many times the move can be used
+}
+
+// PokemonByID fetches a Pokémon by its numeric ID.
 func (c *Client) PokemonByID(ctx context.Context, id int) (*Pokemon, error) {
 	path, err := url.JoinPath(pokemonPath, fmt.Sprint(id))
 	if err != nil {
@@ -45,6 +48,7 @@ func (c *Client) PokemonByID(ctx context.Context, id int) (*Pokemon, error) {
 	return c.mapPokemon(ctx, apiPokemon)
 }
 
+// PokemonByName fetches a Pokémon by its name.
 func (c *Client) PokemonByName(ctx context.Context, name string) (*Pokemon, error) {
 	path, err := url.JoinPath(pokemonPath, name)
 	if err != nil {
@@ -60,6 +64,9 @@ func (c *Client) PokemonByName(ctx context.Context, name string) (*Pokemon, erro
 	return c.mapPokemon(ctx, pokemon)
 }
 
+// AllPokemon fetches all Pokémon using pagination.
+// This method automatically handles pagination and fetches complete Pokémon data.
+// Use with caution as it fetches a large amount of data.
 func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Pokemon, error) {
 	pager := c.PokemonPager(options...)
 
@@ -94,12 +101,18 @@ func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Po
 	return results, nil
 }
 
+// PokemonPage fetches a single page of Pokémon resources.
+// Returns a list of Resource objects containing names and URLs.
+// You can parse these results to fetch pokemon data by using the FetchResults(N) function.
 func (c *Client) PokemonPage(ctx context.Context, options ...RequestOption) ([]Resource, error) {
 	pager := c.PokemonPager(options...)
 
 	return pager.Next(ctx)
 }
 
+// PokemonPager creates a new pager for iterating through Pokémon pages.
+// Use this for manual pagination control.
+// You can parse these results to fetch pokemon data by using the FetchResults(N) function.
 func (c *Client) PokemonPager(options ...RequestOption) *Pager {
 	opts := defaultRequestOptions()
 	if options != nil {

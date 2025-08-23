@@ -1,36 +1,10 @@
-# PokeAPI SDK
-
-A Go SDK for interacting with the [PokéAPI](https://pokeapi.co/). This library provides a simple, 
-efficient way to fetch Pokemon data with built-in caching, rate limiting, and structured data types.
-
-## Installation
-
-```bash
-go get github.com/tgmendes/pokeapi-sdk
-```
-
-## What it does
-
-This SDK allows you to:
-- Fetch Pokemon data by name or ID
-- Retrieve generation information
-- Access Pokemon moves, stats, and other attributes
-- Benefit from automatic caching and rate limiting
-- Handle paginated results
-
-## Usage
-
-You find an example in the [cmd/example.go](cmd/example.go) file.
-
-```go
 package main
 
 import (
-    "context"
-    "fmt"
-    "log"
-    
-    "github.com/tgmendes/pokeapi-sdk"
+	"context"
+	"fmt"
+
+	"github.com/tgmendes/pokeapi-sdk"
 )
 
 func main() {
@@ -50,6 +24,7 @@ func main() {
 	// get all pokemon
 	allPokemon, _ := client.AllPokemon(context.Background())
 
+	fmt.Printf("Total pokemon: %d\n", len(allPokemon))
 	fmt.Printf("First Pokémon: %s (ID: %d)\n", allPokemon[0].Name, allPokemon[0].ID)
 	fmt.Printf("Last Pokémon: %s (ID: %d)\n",
 		allPokemon[len(allPokemon)-1].Name, allPokemon[len(allPokemon)-1].ID)
@@ -60,7 +35,7 @@ func main() {
 	fmt.Printf("Generation: %s (ID: %d)\n", generation.Name, generation.ID)
 
 	// get generation by name
-	generation, _ = client.GenerationByName(context.Background(), "generation-i")
+	generation, _ = client.GenerationByName(context.Background(), "generation-iii")
 
 	fmt.Printf("Generation: %s (ID: %d)\n", generation.Name, generation.ID)
 
@@ -73,42 +48,15 @@ func main() {
 	pager := client.PokemonPager(pokeapi.Limit(50))
 	firstPage, _ := pager.Next(context.Background())
 	res, _ := pokeapi.FetchResultsN[pokeapi.Pokemon](context.Background(), client, firstPage, 5)
-	fmt.Printf("First Pokemon: %d\n", len(res[0].Name))
+	fmt.Printf("First Pokemon: %s\n", res[0].Name)
 
 	// next page
 	secondPage, _ := pager.Next(context.Background())
 	res, _ = pokeapi.FetchResultsN[pokeapi.Pokemon](context.Background(), client, secondPage, 5)
-	fmt.Printf("Second Pokemon: %d\n", len(res[0].Name))
+	fmt.Printf("Second Pokemon: %s\n", res[0].Name)
 
 	// previous page
 	previousPage, _ := pager.Previous(context.Background())
 	res, _ = pokeapi.FetchResultsN[pokeapi.Pokemon](context.Background(), client, previousPage, 5)
-	fmt.Printf("Previous Pokemon: %d\n", len(res[0].Name))    
+	fmt.Printf("Previous Pokemon: %s\n", res[0].Name)
 }
-```
-
-## Testing
-
-To run unit tests:
-
-```bash
-go test -v ./...
-```
-
-To run integration tests:
-
-```bash
-go test -v -tags=integration ./...
-```
-
-## Future Improvements
-
-* Tweak rate limiting
-* Improved error handling and return codes
-* Improved caching strategy
-* More comprehensive tests
-* Automatic generation of methods and API structs
-* Better handling of query parameters (use URL) and setup parameters on generic 
-client rather than on each method
-* Create a test server that can handle all requests
-* Add fun methods to pokemon (e.g. `pokemon.canBeat(otherPokemon)`)

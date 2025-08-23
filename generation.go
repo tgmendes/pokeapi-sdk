@@ -9,18 +9,20 @@ import (
 	"github.com/tgmendes/pokeapi-sdk/internal/apitype"
 )
 
-type Generation struct {
-	ID             int
-	Name           string
-	Region         string
-	Locations      []string
-	Moves          []string
-	PokemonSpecies []string
-	Types          []string
-}
-
 const generationPath = "/generation"
 
+// Generation represents a Pokémon generation and some of its main features.
+type Generation struct {
+	ID             int      // Unique identifier for the generation
+	Name           string   // Name of the generation (e.g., "generation-i")
+	Region         string   // Main region of the generation
+	Locations      []string // List of location names in this generation
+	Moves          []string // List of move names introduced in this generation
+	PokemonSpecies []string // List of Pokémon species introduced in this generation
+	Types          []string // List of types introduced in this generation
+}
+
+// GenerationByID fetches a generation by its numeric ID.
 func (c *Client) GenerationByID(ctx context.Context, id int) (*Generation, error) {
 	path, err := url.JoinPath(generationPath, fmt.Sprint(id))
 	if err != nil {
@@ -36,6 +38,7 @@ func (c *Client) GenerationByID(ctx context.Context, id int) (*Generation, error
 	return c.mapGeneration(ctx, apiGeneration)
 }
 
+// GenerationByName fetches a generation by its name (e.g., "generation-i").
 func (c *Client) GenerationByName(ctx context.Context, name string) (*Generation, error) {
 	path, err := url.JoinPath(generationPath, name)
 	if err != nil {
@@ -51,6 +54,8 @@ func (c *Client) GenerationByName(ctx context.Context, name string) (*Generation
 	return c.mapGeneration(ctx, apiGeneration)
 }
 
+// AllGenerations fetches all generations using pagination.
+// This method automatically handles pagination and fetches complete generation data.
 func (c *Client) AllGenerations(ctx context.Context, options ...RequestOption) ([]Generation, error) {
 	pager := c.GenerationPager(options...)
 
@@ -85,12 +90,18 @@ func (c *Client) AllGenerations(ctx context.Context, options ...RequestOption) (
 	return results, nil
 }
 
+// GenerationPage fetches a single page of generation resources.
+// Returns a list of Resource objects containing names and URLs.
+// You can parse these results to fetch generation data by using the FetchResults(N) function.
 func (c *Client) GenerationPage(ctx context.Context, options ...RequestOption) ([]Resource, error) {
 	pager := c.GenerationPager(options...)
 
 	return pager.Next(ctx)
 }
 
+// GenerationPager creates a new pager for iterating through generation pages.
+// Use this for manual pagination control.
+// You can parse these results to fetch generation data by using the FetchResults(N) function.
 func (c *Client) GenerationPager(options ...RequestOption) *Pager {
 	opts := defaultRequestOptions()
 	if options != nil {
