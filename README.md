@@ -30,7 +30,11 @@ Summary of features:
 
 ## Usage
 
-You find an example in the [cmd/example.go](cmd/example.go) file.
+You find an example in the [cmd/example.go](cmd/example.go) file, and run it using:
+
+```bash
+go run cmd/example.go
+```
 
 ```go
 package main
