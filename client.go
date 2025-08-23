@@ -150,6 +150,9 @@ func (c *Client) Get(ctx context.Context, path string, response any) error {
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent",
+		"pokeapi-sdk/1.0 (+https://github.com/tgmendes/pokeapi-sdk)")
 
 	resp, err := c.http.Do(req)
 	if err != nil {
