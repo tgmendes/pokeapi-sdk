@@ -78,81 +78,6 @@ func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	return &c, nil
 }
 
-// FetchResults fetches all resources from the given list sequentially.
-// It makes individual API calls for each resource URL and returns the results.
-func FetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, error) {
-	results := make([]T, 0, len(l))
-	for _, result := range l {
-		var resp T
-		err := c.Get(ctx, result.URL, &resp)
-		if err != nil {
-			return nil, err
-		}
-		results = append(results, resp)
-	}
-
-	return results, nil
-}
-
-// FetchResultsN fetches all resources from the given list concurrently using n workers.
-// It's more efficient than FetchResults for large lists but uses more resources.
-func FetchResultsN[T any](ctx context.Context, c *Client, l []Resource, n int) ([]T, error) {
-	if n < 1 {
-		n = 1
-	}
-	type job struct {
-		index int
-		url   string
-	}
-	type res struct {
-		index int
-		value T
-		err   error
-	}
-
-	jobs := make(chan job)
-	out := make(chan res)
-
-	var wg sync.WaitGroup
-	for range n {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := range jobs {
-				var v T
-				err := c.Get(ctx, j.url, &v)
-				out <- res{j.index, v, err}
-			}
-		}()
-	}
-	go func() {
-		wg.Wait()
-		close(out)
-	}()
-
-	go func() {
-		for i, r := range l {
-			select {
-			case <-ctx.Done():
-				close(jobs)
-				return
-			case jobs <- job{i, r.URL}:
-			}
-		}
-		close(jobs)
-	}()
-
-	results := make([]T, len(l))
-	for r := range out {
-		if r.err != nil {
-			return nil, r.err
-		}
-		results[r.index] = r.value
-	}
-
-	return results, ctx.Err()
-}
-
 // Get performs a GET request to the given path and unmarshals the response.
 // The path can be absolute or relative to the client's base URL. If a relative path is given,
 // an absolute path is constructed by joining the base URL and the relative path.
@@ -209,6 +134,93 @@ func (c *Client) Get(ctx context.Context, path string, response any) error {
 	c.cache.Set(cacheKey(requestURL), b)
 
 	return json.Unmarshal(b, response)
+}
+
+// FetchResults fetches all resources from the given list sequentially.
+// It makes individual API calls for each resource URL and returns the results.
+func FetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, error) {
+	results := make([]T, 0, len(l))
+	for _, result := range l {
+		var resp T
+		err := c.Get(ctx, result.URL, &resp)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, resp)
+	}
+
+	return results, nil
+}
+
+// FetchResultsN fetches all resources from the given list concurrently using n workers.
+// It's more efficient than FetchResults for large lists but uses more resources.
+func FetchResultsN[T any](ctx context.Context, c *Client, l []Resource, n int) ([]T, error) {
+	if n < 1 {
+		n = 1
+	}
+	type job struct {
+		index int
+		url   string
+	}
+	type res struct {
+		index int
+		value T
+		err   error
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	jobs := make(chan job)
+	out := make(chan res)
+
+	var wg sync.WaitGroup
+	for range n {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := range jobs {
+				var v T
+				err := c.Get(ctx, j.url, &v)
+				out <- res{j.index, v, err}
+			}
+		}()
+	}
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	go func() {
+		for i, r := range l {
+			select {
+			case <-ctx.Done():
+				close(jobs)
+				return
+			case jobs <- job{i, r.URL}:
+			}
+		}
+		close(jobs)
+	}()
+
+	results := make([]T, len(l))
+	var firstErr error
+	for r := range out {
+		if r.err != nil && firstErr == nil {
+			firstErr = r.err
+			// Stop everyone else; keep draining 'out' until closed.
+			cancel()
+			continue
+		}
+		if firstErr == nil { // ignore successes after cancel
+			results[r.index] = r.value
+		}
+	}
+
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	return results, ctx.Err()
 }
 
 func cacheKey(rawURL string) string {
