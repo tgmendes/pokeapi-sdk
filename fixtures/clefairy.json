@@ -53,7 +53,7 @@
     {
       "move": {
         "name": "pound",
-        "url": "https://pokeapi.co/api/v2/move/1/"
+        "url": "/api/v2/move/1/"
       },
       "version_group_details": [
         {
@@ -73,7 +73,7 @@
   ],
   "species": {
     "name": "clefairy",
-    "url": "https://pokeapi.co/api/v2/pokemon-species/35/"
+    "url": "/api/v2/pokemon-species/35/"
   },
   "sprites": {
     "back_default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/35.png",
