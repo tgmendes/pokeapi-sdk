@@ -1,0 +1,150 @@
+package pokeapi_test
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/tgmendes/pokeapi-sdk"
+)
+
+func TestGetPokemonByName(t *testing.T) {
+	srv := setupServer(t)
+	defer srv.Close()
+
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	pokemon, err := client.PokemonByName(t.Context(), "clefairy")
+	require.NoError(t, err)
+	require.NotNil(t, pokemon)
+	assert.Equal(t, pokemon.ID, 35)
+	assert.Equal(t, pokemon.Name, "clefairy")
+	assert.NotEmpty(t, pokemon.Moves)
+	assert.False(t, pokemon.IsLegendary)
+}
+
+func TestGetPokemonByID(t *testing.T) {
+	srv := setupServer(t)
+	defer srv.Close()
+
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	pokemon, err := client.PokemonByID(t.Context(), 35)
+	require.NoError(t, err)
+	require.NotNil(t, pokemon)
+	assert.Equal(t, pokemon.ID, 35)
+	assert.Equal(t, pokemon.Name, "clefairy")
+}
+
+func TestPokemonPage(t *testing.T) {
+	srv := setupServer(t)
+	defer srv.Close()
+
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	results, err := client.PokemonPage(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, results)
+	assert.Len(t, results, 20)
+	assert.Equal(t, results[0].Name, "bulbasaur")
+}
+
+func TestAllPokemon(t *testing.T) {
+	srv := setupServer(t)
+	defer srv.Close()
+
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	pokemon, err := client.AllPokemon(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, pokemon)
+	assert.Len(t, pokemon, 40)
+	assert.Equal(t, pokemon[0].ID, 35)
+	assert.Equal(t, pokemon[0].Name, "clefairy")
+}
+
+func TestPokemonPager(t *testing.T) {
+	gotLimit := ""
+	gotOffset := ""
+	srv := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			gotLimit = r.URL.Query().Get("limit")
+			gotOffset = r.URL.Query().Get("offset")
+			_, _ = w.Write(fixture(t, "pokemon_page1.json"))
+		},
+	))
+
+	tests := []struct {
+		name      string
+		opts      []pokeapi.RequestOption
+		expLimit  string
+		expOffset string
+	}{
+		{
+			name:      "uses default options when no options are passed",
+			expLimit:  "20",
+			expOffset: "0",
+		},
+		{
+			name: "uses limit when limit is passed",
+			opts: []pokeapi.RequestOption{
+				pokeapi.Limit(5),
+			},
+			expLimit:  "5",
+			expOffset: "",
+		},
+		{
+			name: "uses limit and offset when both are passed",
+			opts: []pokeapi.RequestOption{
+				pokeapi.Limit(5),
+				pokeapi.Offset(5),
+			},
+			expLimit:  "5",
+			expOffset: "5",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			gotLimit = ""
+			gotOffset = ""
+			client, err := pokeapi.NewClient(srv.URL)
+			require.NoError(t, err)
+			pager := client.PokemonPager(test.opts...)
+			_, err = pager.Next(t.Context())
+			require.NoError(t, err)
+			assert.Equal(t, test.expLimit, gotLimit)
+			assert.Equal(t, test.expOffset, gotOffset)
+		})
+	}
+}
+
+func setupServer(t *testing.T) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case strings.Contains(r.URL.Path, "pokemon-species"):
+				_, _ = w.Write(fixture(t, "species.json"))
+				return
+			case strings.Contains(r.URL.Path, "move"):
+				_, _ = w.Write(fixture(t, "move.json"))
+				return
+			case r.URL.Query().Get("offset") == "0":
+				_, _ = w.Write(fixture(t, "pokemon_page1.json"))
+				return
+			case r.URL.Query().Get("offset") == "20":
+				_, _ = w.Write(fixture(t, "pokemon_page2.json"))
+				return
+			default:
+				_, _ = w.Write(fixture(t, "clefairy.json"))
+			}
+		},
+	))
+}
