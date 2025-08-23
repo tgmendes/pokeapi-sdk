@@ -53,9 +53,9 @@ func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	return &c, nil
 }
 
-func FetchResults[T any](ctx context.Context, c *Client, l *List) ([]T, error) {
-	results := make([]T, 0, len(l.Results))
-	for _, result := range l.Results {
+func FetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, error) {
+	results := make([]T, 0, len(l))
+	for _, result := range l {
 		var resp T
 		err := c.Get(ctx, result.URL, &resp)
 		if err != nil {
@@ -67,7 +67,7 @@ func FetchResults[T any](ctx context.Context, c *Client, l *List) ([]T, error) {
 	return results, nil
 }
 
-func FetchResultsN[T any](ctx context.Context, c *Client, l *List, n int) ([]T, error) {
+func FetchResultsN[T any](ctx context.Context, c *Client, l []Resource, n int) ([]T, error) {
 	if n < 1 {
 		n = 1
 	}
@@ -102,7 +102,7 @@ func FetchResultsN[T any](ctx context.Context, c *Client, l *List, n int) ([]T, 
 	}()
 
 	go func() {
-		for i, r := range l.Results {
+		for i, r := range l {
 			select {
 			case <-ctx.Done():
 				close(jobs)
@@ -113,7 +113,7 @@ func FetchResultsN[T any](ctx context.Context, c *Client, l *List, n int) ([]T, 
 		close(jobs)
 	}()
 
-	results := make([]T, len(l.Results))
+	results := make([]T, len(l))
 	for r := range out {
 		if r.err != nil {
 			return nil, r.err

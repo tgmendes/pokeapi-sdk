@@ -37,7 +37,7 @@ func TestPager_Next(t *testing.T) {
 	startPath := fmt.Sprintf("%s/pokemon?offset=0", srv.URL)
 	pager := pokeapi.NewPager(client, startPath)
 
-	var totalResults []pokeapi.List
+	var totalResults []pokeapi.Resource
 	for {
 		list, err := pager.Next(t.Context())
 		if errors.Is(err, pokeapi.ErrNoMorePages) {
@@ -45,10 +45,10 @@ func TestPager_Next(t *testing.T) {
 		}
 		require.NoError(t, err)
 		require.NotNil(t, list)
-		totalResults = append(totalResults, *list)
+		totalResults = append(totalResults, list...)
 	}
 
-	assert.Len(t, totalResults, 2)
+	assert.Len(t, totalResults, 40)
 }
 
 func TestPager_Previous(t *testing.T) {
@@ -92,5 +92,5 @@ func TestPager_Previous(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, list)
 	// first element of first page is bulbasaur
-	assert.Equal(t, list.Results[0].Name, "bulbasaur")
+	assert.Equal(t, list[0].Name, "bulbasaur")
 }

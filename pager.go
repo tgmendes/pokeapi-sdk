@@ -3,21 +3,16 @@ package pokeapi
 import (
 	"context"
 	"errors"
+
+	"github.com/tgmendes/pokeapi-sdk/internal/apitype"
 )
 
+type Resource struct {
+	Name string
+	URL  string
+}
+
 var ErrNoMorePages = errors.New("no more pages")
-
-type List struct {
-	Count   int          `json:"count"`
-	Next    *string      `json:"next"`
-	Prev    *string      `json:"previous"`
-	Results []ListResult `json:"results"`
-}
-
-type ListResult struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-}
 
 // Pager is used to iterate over a list of results from the PokeAPI.
 // This is not concurrent safe, and should be used sequentially.
@@ -34,7 +29,7 @@ func NewPager(c *Client, startPath string) *Pager {
 	}
 }
 
-func (p *Pager) Next(ctx context.Context) (*List, error) {
+func (p *Pager) Next(ctx context.Context) ([]Resource, error) {
 	if p.next == nil {
 		return nil, ErrNoMorePages
 	}
@@ -42,7 +37,7 @@ func (p *Pager) Next(ctx context.Context) (*List, error) {
 	return p.iter(ctx, *p.next)
 }
 
-func (p *Pager) Previous(ctx context.Context) (*List, error) {
+func (p *Pager) Previous(ctx context.Context) ([]Resource, error) {
 	if p.previous == nil {
 		return nil, ErrNoMorePages
 	}
@@ -50,8 +45,8 @@ func (p *Pager) Previous(ctx context.Context) (*List, error) {
 	return p.iter(ctx, *p.previous)
 }
 
-func (p *Pager) iter(ctx context.Context, url string) (*List, error) {
-	var results List
+func (p *Pager) iter(ctx context.Context, url string) ([]Resource, error) {
+	var results apitype.List
 	if err := p.c.Get(ctx, url, &results); err != nil {
 		return nil, err
 	}
@@ -71,5 +66,12 @@ func (p *Pager) iter(ctx context.Context, url string) (*List, error) {
 		p.previous = &prev
 	}
 
-	return &results, nil
+	resource := make([]Resource, 0, len(results.Results))
+	for _, result := range results.Results {
+		resource = append(resource, Resource{
+			Name: result.Name,
+			URL:  result.URL,
+		})
+	}
+	return resource, nil
 }

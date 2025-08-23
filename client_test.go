@@ -24,27 +24,25 @@ func TestList_FetchResults(t *testing.T) {
 	))
 	defer srv.Close()
 
-	l := pokeapi.List{
-		Results: []pokeapi.ListResult{
-			{
-				Name: "bulbasaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "ivysaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "venusaur",
-				URL:  "/pokemon/1",
-			},
+	l := []pokeapi.Resource{
+		{
+			Name: "bulbasaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "ivysaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "venusaur",
+			URL:  "/pokemon/1",
 		},
 	}
 
 	client, err := pokeapi.NewClient(srv.URL)
 	require.NoError(t, err)
 
-	res, err := pokeapi.FetchResults[pokeapi.Pokemon](t.Context(), client, &l)
+	res, err := pokeapi.FetchResults[pokeapi.Pokemon](t.Context(), client, l)
 	require.NoError(t, err)
 
 	assert.Len(t, res, 3)
@@ -61,59 +59,57 @@ func TestList_FetchResultsN(t *testing.T) {
 	))
 	defer srv.Close()
 
-	l := pokeapi.List{
-		Results: []pokeapi.ListResult{
-			{
-				Name: "bulbasaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "ivysaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "venusaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "ivysaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "venusaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "ivysaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "venusaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "ivysaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "venusaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "ivysaur",
-				URL:  "/pokemon/1",
-			},
-			{
-				Name: "venusaur",
-				URL:  "/pokemon/1",
-			},
+	l := []pokeapi.Resource{
+		{
+			Name: "bulbasaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "ivysaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "venusaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "ivysaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "venusaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "ivysaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "venusaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "ivysaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "venusaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "ivysaur",
+			URL:  "/pokemon/1",
+		},
+		{
+			Name: "venusaur",
+			URL:  "/pokemon/1",
 		},
 	}
 
 	client, err := pokeapi.NewClient(srv.URL)
 	require.NoError(t, err)
 
-	res, err := pokeapi.FetchResultsN[pokeapi.Pokemon](t.Context(), client, &l, 4)
+	res, err := pokeapi.FetchResultsN[pokeapi.Pokemon](t.Context(), client, l, 4)
 	require.NoError(t, err)
 
 	assert.Len(t, res, 11)
