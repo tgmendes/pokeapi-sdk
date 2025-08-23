@@ -1,3 +1,5 @@
+//go:build integration
+
 package pokeapi_test
 
 import (
@@ -14,8 +16,8 @@ func TestPokemonByID_Integration(t *testing.T) {
 
 	pokemon, err := client.PokemonByID(t.Context(), 1)
 	require.NoError(t, err)
-	assert.Equal(t, pokemon.ID, 1)
-	assert.Equal(t, pokemon.Name, "bulbasaur")
+	assert.Equal(t, 1, pokemon.ID)
+	assert.Equal(t, "bulbasaur", pokemon.Name)
 }
 
 func TestPokemonByName_Integration(t *testing.T) {
@@ -23,8 +25,8 @@ func TestPokemonByName_Integration(t *testing.T) {
 
 	pokemon, err := client.PokemonByName(t.Context(), "bulbasaur")
 	require.NoError(t, err)
-	assert.Equal(t, pokemon.ID, 1)
-	assert.Equal(t, pokemon.Name, "bulbasaur")
+	assert.Equal(t, 1, pokemon.ID)
+	assert.Equal(t, "bulbasaur", pokemon.Name)
 }
 
 func TestAllPokemon_Integration(t *testing.T) {
@@ -36,6 +38,34 @@ func TestAllPokemon_Integration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, pokemon, 1302,
 		"should have 1302 pokemon but got %d", len(pokemon))
-	assert.Equal(t, pokemon[0].ID, 1)
-	assert.Equal(t, pokemon[0].Name, "bulbasaur")
+	assert.Equal(t, 1, pokemon[0].ID)
+	assert.Equal(t, "bulbasaur", pokemon[0].Name)
+}
+
+func TestGenerationByID_Integration(t *testing.T) {
+	client, err := pokeapi.NewClient("https://pokeapi.co/api/v2")
+
+	generation, err := client.GenerationByID(t.Context(), 1)
+	require.NoError(t, err)
+	assert.Equal(t, 1, generation.ID)
+	assert.Equal(t, "generation-i", generation.Name)
+}
+
+func TestGenerationByName_Integration(t *testing.T) {
+	client, err := pokeapi.NewClient("https://pokeapi.co/api/v2")
+
+	generation, err := client.GenerationByName(t.Context(), "generation-i")
+	require.NoError(t, err)
+	assert.Equal(t, 1, generation.ID)
+	assert.Equal(t, "generation-i", generation.Name)
+}
+
+func TestAllGeneration_Integration(t *testing.T) {
+	client, err := pokeapi.NewClient("https://pokeapi.co/api/v2")
+
+	generation, err := client.AllGenerations(t.Context())
+	require.NoError(t, err)
+	assert.Len(t, generation, 9)
+	assert.Equal(t, 1, generation[0].ID)
+	assert.Equal(t, "generation-i", generation[0].Name)
 }
