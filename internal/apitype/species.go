@@ -22,7 +22,7 @@ type Species struct {
 	IsLegendary          bool               `json:"is_legendary"`
 	IsMythical           bool               `json:"is_mythical"`
 	Name                 string             `json:"name"`
-	Names                []Name             `json:"names"`
+	Names                []LanguageResource `json:"names"`
 	Order                int                `json:"order"`
 	PalParkEncounters    []PalParkEncounter `json:"pal_park_encounters"`
 	PokedexNumbers       []PokedexNumber    `json:"pokedex_numbers"`
