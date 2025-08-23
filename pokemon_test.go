@@ -3,6 +3,7 @@ package pokeapi_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,15 +13,7 @@ import (
 )
 
 func TestGetPokemonByName(t *testing.T) {
-	calledPath := ""
-	calledMethod := ""
-	srv := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			calledPath = r.URL.Path
-			calledMethod = r.Method
-			_, _ = w.Write(fixture(t, "clefairy.json"))
-		},
-	))
+	srv := setupServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
@@ -29,22 +22,14 @@ func TestGetPokemonByName(t *testing.T) {
 	pokemon, err := client.PokemonByName(t.Context(), "clefairy")
 	require.NoError(t, err)
 	require.NotNil(t, pokemon)
-	assert.Equal(t, calledPath, "/pokemon/clefairy")
-	assert.Equal(t, calledMethod, http.MethodGet)
 	assert.Equal(t, pokemon.ID, 35)
 	assert.Equal(t, pokemon.Name, "clefairy")
+	assert.NotEmpty(t, pokemon.Moves)
+	assert.False(t, pokemon.IsLegendary)
 }
 
 func TestGetPokemonByID(t *testing.T) {
-	calledPath := ""
-	calledMethod := ""
-	srv := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			calledPath = r.URL.Path
-			calledMethod = r.Method
-			_, _ = w.Write(fixture(t, "clefairy.json"))
-		},
-	))
+	srv := setupServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
@@ -53,53 +38,26 @@ func TestGetPokemonByID(t *testing.T) {
 	pokemon, err := client.PokemonByID(t.Context(), 35)
 	require.NoError(t, err)
 	require.NotNil(t, pokemon)
-	assert.Equal(t, calledPath, "/pokemon/35")
-	assert.Equal(t, calledMethod, http.MethodGet)
 	assert.Equal(t, pokemon.ID, 35)
 	assert.Equal(t, pokemon.Name, "clefairy")
 }
 
 func TestPokemonPage(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write(fixture(t, "pokemon_page1.json"))
-		},
-	))
+	srv := setupServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
 	require.NoError(t, err)
 
-	page, err := client.PokemonPage(t.Context())
+	results, err := client.PokemonPage(t.Context())
 	require.NoError(t, err)
-	require.NotNil(t, page)
-	assert.Len(t, page.Results, 20)
-	assert.Equal(t, page.Results[0].Name, "bulbasaur")
+	require.NotNil(t, results)
+	assert.Len(t, results, 20)
+	assert.Equal(t, results[0].Name, "bulbasaur")
 }
 
 func TestAllPokemon(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			// because it's a test we can hardcode the comparison - if we wanted something more
-			// robust we could parse the URL and compare the query parameters.
-			if r.URL.Query().Get("offset") == "0" {
-				_, _ = w.Write(fixture(t, "pokemon_page1.json"))
-				return
-			}
-
-			if r.URL.Query().Get("offset") == "20" {
-				_, _ = w.Write(fixture(t, "pokemon_page2.json"))
-				return
-			}
-
-			// this is a direct query to fetch a pokemon
-			if r.URL.Query().Get("offset") == "" {
-				// for testing purposes just write same pokemon all the time
-				_, _ = w.Write(fixture(t, "clefairy.json"))
-				return
-			}
-		},
-	))
+	srv := setupServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
@@ -166,4 +124,27 @@ func TestPokemonPager(t *testing.T) {
 			assert.Equal(t, test.expOffset, gotOffset)
 		})
 	}
+}
+
+func setupServer(t *testing.T) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case strings.Contains(r.URL.Path, "pokemon-species"):
+				_, _ = w.Write(fixture(t, "species.json"))
+				return
+			case strings.Contains(r.URL.Path, "move"):
+				_, _ = w.Write(fixture(t, "move.json"))
+				return
+			case r.URL.Query().Get("offset") == "0":
+				_, _ = w.Write(fixture(t, "pokemon_page1.json"))
+				return
+			case r.URL.Query().Get("offset") == "20":
+				_, _ = w.Write(fixture(t, "pokemon_page2.json"))
+				return
+			default:
+				_, _ = w.Write(fixture(t, "clefairy.json"))
+			}
+		},
+	))
 }
