@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/tgmendes/pokeapi-sdk/internal/apitype"
 )
@@ -30,9 +31,13 @@ type Move struct {
 const pokemonPath = "/pokemon"
 
 func (c *Client) PokemonByID(ctx context.Context, id int) (*Pokemon, error) {
-	path := fmt.Sprintf("%s/%d", pokemonPath, id)
+	path, err := url.JoinPath(pokemonPath, fmt.Sprint(id))
+	if err != nil {
+		return nil, fmt.Errorf("failed to join path: %w", err)
+	}
+
 	var apiPokemon apitype.Pokemon
-	err := c.Get(ctx, path, &apiPokemon)
+	err = c.Get(ctx, path, &apiPokemon)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pokemon with id %d: %w", id, err)
 	}
@@ -41,10 +46,13 @@ func (c *Client) PokemonByID(ctx context.Context, id int) (*Pokemon, error) {
 }
 
 func (c *Client) PokemonByName(ctx context.Context, name string) (*Pokemon, error) {
-	path := fmt.Sprintf("%s/%s", pokemonPath, name)
+	path, err := url.JoinPath(pokemonPath, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to join path: %w", err)
+	}
 
 	var pokemon apitype.Pokemon
-	err := c.Get(ctx, path, &pokemon)
+	err = c.Get(ctx, path, &pokemon)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pokemon with name %s: %w", name, err)
 	}
