@@ -1,4 +1,4 @@
-//go:build integration
+////go:build integration
 
 package pokeapi_test
 
@@ -42,6 +42,22 @@ func TestAllPokemon_Integration(t *testing.T) {
 	assert.Equal(t, "bulbasaur", pokemon[0].Name)
 }
 
+func TestPokemonPage_Integration(t *testing.T) {
+	client, err := pokeapi.NewClient("https://pokeapi.co/api/v2",
+		pokeapi.WithLimit(2000, 2000))
+	require.NoError(t, err)
+
+	page, err := client.PokemonPage(t.Context(),
+		pokeapi.Limit(10), pokeapi.Offset(20))
+	require.NoError(t, err)
+
+	results, err := client.ParsePokemonResource(t.Context(), page)
+	require.NoError(t, err)
+	assert.Len(t, results, 10)
+	assert.Equal(t, 21, results[0].ID)
+	assert.Equal(t, "spearow", results[0].Name)
+}
+
 func TestGenerationByID_Integration(t *testing.T) {
 	client, err := pokeapi.NewClient("https://pokeapi.co/api/v2")
 
@@ -68,4 +84,19 @@ func TestAllGeneration_Integration(t *testing.T) {
 	assert.Len(t, generation, 9)
 	assert.Equal(t, 1, generation[0].ID)
 	assert.Equal(t, "generation-i", generation[0].Name)
+}
+
+func TestGenerationPage_Integration(t *testing.T) {
+	client, err := pokeapi.NewClient("https://pokeapi.co/api/v2",
+		pokeapi.WithLimit(2000, 2000))
+	require.NoError(t, err)
+
+	page, err := client.GenerationPage(t.Context())
+	require.NoError(t, err)
+
+	results, err := client.ParseGenerationResource(t.Context(), page)
+	require.NoError(t, err)
+	assert.Len(t, results, 9)
+	assert.Equal(t, 1, results[0].ID)
+	assert.Equal(t, "generation-i", results[0].Name)
 }

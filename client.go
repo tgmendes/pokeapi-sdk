@@ -138,7 +138,7 @@ func (c *Client) Get(ctx context.Context, path string, response any) error {
 
 // FetchResults fetches all resources from the given list sequentially.
 // It makes individual API calls for each resource URL and returns the results.
-func FetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, error) {
+func fetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, error) {
 	results := make([]T, 0, len(l))
 	for _, result := range l {
 		var resp T
@@ -154,7 +154,7 @@ func FetchResults[T any](ctx context.Context, c *Client, l []Resource) ([]T, err
 
 // FetchResultsN fetches all resources from the given list concurrently using n workers.
 // It's more efficient than FetchResults for large lists but uses more resources.
-func FetchResultsN[T any](ctx context.Context, c *Client, l []Resource, n int) ([]T, error) {
+func fetchResultsN[T any](ctx context.Context, c *Client, l []Resource, n int) ([]T, error) {
 	if n < 1 {
 		n = 1
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 func TestGetPokemonByName(t *testing.T) {
-	srv := setupServer(t)
+	srv := setupPokemonServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
@@ -29,7 +29,7 @@ func TestGetPokemonByName(t *testing.T) {
 }
 
 func TestGetPokemonByID(t *testing.T) {
-	srv := setupServer(t)
+	srv := setupPokemonServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
@@ -43,7 +43,7 @@ func TestGetPokemonByID(t *testing.T) {
 }
 
 func TestPokemonPage(t *testing.T) {
-	srv := setupServer(t)
+	srv := setupPokemonServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
@@ -57,7 +57,7 @@ func TestPokemonPage(t *testing.T) {
 }
 
 func TestAllPokemon(t *testing.T) {
-	srv := setupServer(t)
+	srv := setupPokemonServer(t)
 	defer srv.Close()
 
 	client, err := pokeapi.NewClient(srv.URL)
@@ -69,6 +69,24 @@ func TestAllPokemon(t *testing.T) {
 	assert.Len(t, pokemon, 40)
 	assert.Equal(t, pokemon[0].ID, 35)
 	assert.Equal(t, pokemon[0].Name, "clefairy")
+	assert.Len(t, pokemon[0].Moves, 1)
+}
+
+func TestParsePokemonResource(t *testing.T) {
+	srv := setupPokemonServer(t)
+	defer srv.Close()
+
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	page, err := client.PokemonPage(t.Context())
+	require.NoError(t, err)
+
+	pokemons, err := client.ParsePokemonResource(t.Context(), page)
+	require.NoError(t, err)
+	require.NotNil(t, pokemons)
+	assert.Len(t, pokemons, 20)
+	assert.Len(t, pokemons[0].Moves, 1)
 }
 
 func TestPokemonPager(t *testing.T) {
@@ -126,7 +144,7 @@ func TestPokemonPager(t *testing.T) {
 	}
 }
 
-func setupServer(t *testing.T) *httptest.Server {
+func setupPokemonServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			switch {

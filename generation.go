@@ -70,7 +70,7 @@ func (c *Client) AllGenerations(ctx context.Context, options ...RequestOption) (
 			return nil, err
 		}
 
-		apiGenerations, err := FetchResultsN[apitype.Generation](ctx, c, list, 5)
+		apiGenerations, err := fetchResultsN[apitype.Generation](ctx, c, list, 5)
 		if err != nil {
 			return nil, err
 		}
@@ -117,6 +117,26 @@ func (c *Client) GenerationPager(options ...RequestOption) *Pager {
 	return NewPager(c, startPath)
 }
 
+// ParseGenerationResource takes a list of pagination resources and converts them into
+// a list of generations.
+func (c *Client) ParseGenerationResource(ctx context.Context, resource []Resource) ([]Generation, error) {
+	apiGenerations, err := fetchResultsN[apitype.Generation](ctx, c, resource, 5)
+	if err != nil {
+		return nil, err
+	}
+
+	generations := make([]Generation, 0, len(apiGenerations))
+	for _, apiGeneration := range apiGenerations {
+		generation, err := c.mapGeneration(ctx, apiGeneration)
+		if err != nil {
+			return nil, err
+		}
+		generations = append(generations, *generation)
+	}
+
+	return generations, nil
+}
+
 func (c *Client) mapGeneration(ctx context.Context, gen apitype.Generation) (*Generation, error) {
 	moves := make([]string, 0, len(gen.Moves))
 	for _, move := range gen.Moves {
@@ -138,7 +158,7 @@ func (c *Client) mapGeneration(ctx context.Context, gen apitype.Generation) (*Ge
 		URL:  gen.MainRegion.URL,
 	}
 
-	region, err := FetchResults[apitype.Region](ctx, c, []Resource{regionResource})
+	region, err := fetchResults[apitype.Region](ctx, c, []Resource{regionResource})
 	if err != nil {
 		return nil, err
 	}

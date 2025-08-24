@@ -115,6 +115,29 @@ To run integration tests:
 go test -v -tags=integration ./...
 ```
 
+## Tools used
+
+- [Go 1.24](https://golang.org)
+- [PokeAPI](https://pokeapi.co) as the main data source
+- [Testify](https://pkg.go.dev/github.com/stretchr/testify) for assertions
+- [QucikType](https://app.quicktype.io/) for generating API structs
+- [Ristretto](https://github.com/dgraph-io/ristretto) for caching
+
+## Design Philosophy
+
+The SDK was designed to be simple but extensible. For a client of this type
+a flat structure was chosen, with just a few internals (cache and api types). This
+keeps things simple, while also being testable.
+
+The API types being in a non-importable package allows us to cleary define 
+the boundaries between what is the raw data types from the API, and what is the 
+public objects we want to expose to consumers (which are not just the plain API response, but
+are enriched to provide a better user experience).
+
+When multiple requests are involved (such as fetching list resource), concurrency
+was chosen to avoid requests taking too long. Our rate limiting logic should ensure that we are not 
+overloading the API.
+
 ## Future Improvements
 
 * Tweak rate limiting
@@ -126,3 +149,4 @@ go test -v -tags=integration ./...
 client rather than on each method
 * Create a test server that can handle all requests
 * Add fun methods to pokemon (e.g. `pokemon.canBeat(otherPokemon)`)
+* Configurable parameters for fetching results

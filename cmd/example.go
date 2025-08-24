@@ -27,12 +27,12 @@ func main() {
 	fmt.Printf("Pokémon: %s (ID: %d)\n", pokemon.Name, pokemon.ID)
 
 	// get all pokemon
-	allPokemon, _ := client.AllPokemon(context.Background())
-
-	fmt.Printf("Total pokemon: %d\n", len(allPokemon))
-	fmt.Printf("First Pokémon: %s (ID: %d)\n", allPokemon[0].Name, allPokemon[0].ID)
-	fmt.Printf("Last Pokémon: %s (ID: %d)\n",
-		allPokemon[len(allPokemon)-1].Name, allPokemon[len(allPokemon)-1].ID)
+	//allPokemon, _ := client.AllPokemon(context.Background())
+	//
+	//fmt.Printf("Total pokemon: %d\n", len(allPokemon))
+	//fmt.Printf("First Pokémon: %s (ID: %d)\n", allPokemon[0].Name, allPokemon[0].ID)
+	//fmt.Printf("Last Pokémon: %s (ID: %d)\n",
+	//	allPokemon[len(allPokemon)-1].Name, allPokemon[len(allPokemon)-1].ID)
 
 	// get generation by id
 	generation, _ := client.GenerationByID(context.Background(), 1)
@@ -52,16 +52,17 @@ func main() {
 	// paginating
 	pager := client.PokemonPager(pokeapi.Limit(50))
 	firstPage, _ := pager.Next(context.Background())
-	res, _ := pokeapi.FetchResultsN[pokeapi.Pokemon](context.Background(), client, firstPage, 5)
+	res, _ := client.ParsePokemonResource(context.Background(), firstPage)
 	fmt.Printf("First Pokemon: %s\n", res[0].Name)
+	fmt.Printf("First Pokemon Moves: %v\n", res[0].Moves)
 
 	// next page
 	secondPage, _ := pager.Next(context.Background())
-	res, _ = pokeapi.FetchResultsN[pokeapi.Pokemon](context.Background(), client, secondPage, 5)
+	res, _ = client.ParsePokemonResource(context.Background(), secondPage)
 	fmt.Printf("Second Pokemon: %s\n", res[0].Name)
 
 	// previous page
 	previousPage, _ := pager.Previous(context.Background())
-	res, _ = pokeapi.FetchResultsN[pokeapi.Pokemon](context.Background(), client, previousPage, 5)
+	res, _ = client.ParsePokemonResource(context.Background(), previousPage)
 	fmt.Printf("Previous Pokemon: %s\n", res[0].Name)
 }
