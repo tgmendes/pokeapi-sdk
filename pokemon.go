@@ -81,18 +81,9 @@ func (c *Client) AllPokemon(ctx context.Context, options ...RequestOption) ([]Po
 			return nil, err
 		}
 
-		apiPokemons, err := FetchResultsN[apitype.Pokemon](ctx, c, list, 5)
+		pokemons, err := c.ParsePokemonResource(ctx, list)
 		if err != nil {
 			return nil, err
-		}
-
-		pokemons := make([]Pokemon, 0, len(apiPokemons))
-		for _, apiPokemon := range apiPokemons {
-			pokemon, err := c.mapPokemon(ctx, apiPokemon)
-			if err != nil {
-				return nil, err
-			}
-			pokemons = append(pokemons, *pokemon)
 		}
 
 		results = append(results, pokemons...)
@@ -128,6 +119,24 @@ func (c *Client) PokemonPager(options ...RequestOption) *Pager {
 	return NewPager(c, startPath)
 }
 
+func (c *Client) ParsePokemonResource(ctx context.Context, resource []Resource) ([]Pokemon, error) {
+	apiPokemons, err := fetchResultsN[apitype.Pokemon](ctx, c, resource, 5)
+	if err != nil {
+		return nil, err
+	}
+
+	pokemons := make([]Pokemon, 0, len(apiPokemons))
+	for _, apiPokemon := range apiPokemons {
+		pokemon, err := c.mapPokemon(ctx, apiPokemon)
+		if err != nil {
+			return nil, err
+		}
+		pokemons = append(pokemons, *pokemon)
+	}
+
+	return pokemons, nil
+}
+
 func (c *Client) mapPokemon(ctx context.Context, poke apitype.Pokemon) (*Pokemon, error) {
 	movesResource := make([]Resource, 0, len(poke.Moves))
 	for _, move := range poke.Moves {
@@ -137,7 +146,7 @@ func (c *Client) mapPokemon(ctx context.Context, poke apitype.Pokemon) (*Pokemon
 		})
 	}
 
-	moves, err := FetchResultsN[apitype.Move](ctx, c, movesResource, 5)
+	moves, err := fetchResultsN[apitype.Move](ctx, c, movesResource, 5)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +156,7 @@ func (c *Client) mapPokemon(ctx context.Context, poke apitype.Pokemon) (*Pokemon
 		URL:  poke.Species.URL,
 	}
 
-	species, err := FetchResults[apitype.Species](ctx, c, []Resource{speciesResource})
+	species, err := fetchResults[apitype.Species](ctx, c, []Resource{speciesResource})
 	if err != nil {
 		return nil, err
 	}

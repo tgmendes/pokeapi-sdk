@@ -129,6 +129,22 @@ func TestGenerationPager(t *testing.T) {
 	}
 }
 
+func TestParseGenerationResource(t *testing.T) {
+	srv := setupGenerationServer(t)
+	defer srv.Close()
+
+	client, err := pokeapi.NewClient(srv.URL)
+	require.NoError(t, err)
+
+	page, err := client.GenerationPage(t.Context())
+	require.NoError(t, err)
+
+	generations, err := client.ParseGenerationResource(t.Context(), page)
+	require.NoError(t, err)
+	require.NotNil(t, generations)
+	assert.Len(t, generations, 9)
+}
+
 func setupGenerationServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
